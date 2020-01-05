@@ -22,7 +22,7 @@ import pickle as p
 ##############################################2
 batch_size = 128
 num_classes = 10
-epochs = 4
+epochs = 3
 
 img_rows, img_cols = 28, 28
 
@@ -77,9 +77,6 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 ##############################################9
 model.summary()
 
-##############################################9
-plotly.offline.iplot(fig1, filename="testMNIST")
-
 ##############################################10
 start = time.time()
 
@@ -89,8 +86,8 @@ done = time.time()
 print(done - start)
 
 ##############################################11
-with open('history_model', 'wb') as file_pi:
-    p.dump(his.history, file_pi)
+with open('history_model', 'wb') as file:
+    p.dump(his.history, file)
 
 ##############################################12
 with open('history_model', 'rb') as file:
@@ -102,13 +99,13 @@ print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
 ##############################################14
-h1 = go.Scatter(y=his.history['loss'], 
+h1 = go.Scatter(y=his['loss'], 
                     mode="lines", line=dict(
                     width=2,
                     color='blue'),
                     name="loss"
                    )
-h2 = go.Scatter(y=his.history['val_loss'], 
+h2 = go.Scatter(y=his['val_loss'], 
                     mode="lines", line=dict(
                     width=2,
                     color='red'),
@@ -123,15 +120,15 @@ layout1 = go.Layout(title='Loss',
 fig1 = go.Figure(data, layout=layout1)
 plotly.offline.iplot(fig1, filename="testMNIST")
 
-##############################################15  
+##############################################16
 filepath='model1.h5'
 model.save(filepath)
 
-##############################################16
+##############################################17
 predict_model = load_model(filepath) 
 predict_model.summary()
 
-##############################################17
+##############################################18
 plt.figure(figsize=(5, 4))
 for i in range(20):
     plt.subplot(4, 5, i+1)
@@ -141,16 +138,16 @@ for i in range(20):
 plt.tight_layout()
 plt.show()
 
-##############################################18
+##############################################19
 x_test[:1].shape
 y_test[:1].shape
 np.argmax(y_test[0], axis=0)
 
-##############################################19
+##############################################20
 result = predict_model.predict_classes(x_test[:1])
 print(result[0])
 
-##############################################20
+##############################################21
 filepath_model = 'model1.json'
 filepath_weights = 'weights_model.h5'
 
@@ -161,27 +158,44 @@ with open(filepath_model, "w") as json_file:
     model.save_weights('weights_model.h5')
     print("Saved model to disk")
 
-##############################################21
+##############################################22
 with open(filepath_model, 'r') as f:
     loaded_model_json = f.read()
     predict_model = model_from_json(loaded_model_json)
     predict_model.load_weights(filepath_weights)    
     print("Loaded model from disk")
 
-##############################################21
+##############################################23
 #predict_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 score = predict_model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
-##############################################22
-from google.colab import drive
-drive.mount('/content/gdrive')
+##############################################24
+predicted_classes = predict_model.predict_classes(x_test)
 
-##############################################23
-with open('/content/gdrive/My Drive/AIRtest/foo.txt', 'w') as f:
-    f.write('Hello Google Drive!')
+##############################################25
+y_true = np.argmax(y_test, axis=1)
 
+##############################################26
+correct = np.nonzero(predicted_classes==y_true)[0]
+incorrect = np.nonzero(predicted_classes!=y_true)[0]
+
+print("Correct predicted classes:",correct.shape[0])
+print("Incorrect predicted classes:",incorrect.shape[0])
+
+##############################################27
+labels = {0 : "0", 1: "1", 2: "2", 3: "3", 4: "4",
+          5: "5", 6: "6", 7: "7", 8: "8", 9: "9"}
+
+target_names = ["Class {} ({}) :".format(i,labels[i]) for i in range(num_classes)]
+print(classification_report(y_true, predicted_classes, target_names=target_names, digits=4))
+
+
+##############################################28
+1. ให้นักศึกษาแสดงกราฟ Accuacy ขณะที่ Train Model
+2. ให้นักศึกษารัน Train Model บน Colab โดยปรับ Epoch เป็น 100 แล้วแสดงกราฟ Accuracy/Loss/Precision/Recall/f1-score
+3. ให้นักศึกษารัน Train Model บน Colab โดยปรับ batch_size เป็น 256 แล้วแสดงกราฟ Accuracy/Loss/Precision/Recall/f1-score และความเร็วในการ Train Model
 
 
 
